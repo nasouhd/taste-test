@@ -59,7 +59,7 @@ class Room:
         self.code = new_code()
         self.players = []          # list of dicts, join order
         self.host_id = None
-        self.settings = {"mode": "standard", "cycles": 1, "direction": "favorite"}
+        self.settings = {"mode": "standard", "cycles": 1, "direction": "favorite", "pass": True}
         self.phase = "lobby"       # lobby | submit | rank | reveal | over
         self.game = None
         self.version = 0
@@ -203,9 +203,17 @@ class Room:
                             hand.append(c)
                 g["hands"][pid] = hand
         else:
-            for pid in g["order"]:
+            order = g["order"]
+            g["passed_from"] = {}
+            if g.get("played_a_turn") and self.settings.get("pass", True):
+                # Everyone hands their leftover cards to the player on their left.
+                n = len(order)
+                g["hands"] = {order[(i + 1) % n]: g["hands"][order[i]] for i in range(n)}
+                g["passed_from"] = {order[(i + 1) % n]: order[i] for i in range(n)}
+            for pid in order:
                 while len(g["hands"][pid]) < HAND_SIZE:
                     g["hands"][pid].append(self.draw())
+            g["played_a_turn"] = True
         self.phase = "submit"
         self.bump()
 
@@ -321,6 +329,7 @@ class Room:
                 "hand": g["hands"].get(pid, []),
                 "submitted": list(g.get("submissions", {}).keys()),
                 "mine": g.get("submissions", {}).get(pid),
+                "passedFrom": g.get("passed_from", {}).get(pid),
                 "entries": [{"eid": e["eid"], "card": e["card"]} for e in g.get("entries", [])]
                 if self.phase == "rank" else [],
                 "results": g.get("results", []) if self.phase in ("reveal",) else [],
@@ -427,6 +436,8 @@ class Handler(BaseHTTPRequestHandler):
                 room.settings["mode"] = s["mode"]
             if s.get("cycles") in (1, 2):
                 room.settings["cycles"] = s["cycles"]
+            if s.get("pass") in (True, False):
+                room.settings["pass"] = s["pass"]
             if s.get("direction") in ("favorite", "least", "alternate", "random"):
                 room.settings["direction"] = s["direction"]
             room.bump()

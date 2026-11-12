@@ -20,8 +20,8 @@ Railway or Heroku-style hosts work too through the `Procfile`. The server reads 
 Use `PORT=9000 python3 server.py` to change the port. No installs needed (Python 3.8+).
 
 ## Modes
-- **Classic** – 5-card hand. The Chooser taps the submitted cards from worst to best. The worst pick earns 1 point and each step up earns 1 more, so the best pick earns N points when N cards were played.
-- **Deluxe** – Each turn draws a category (Places, Foods, Activities, Entertainment, Animals, Things). Players are dealt 3 cards from it, play one, and the Chooser scores each card 1–6 (6 = most accurate, each score used once). Max 7 players.
+- **Classic** – 5-card hand. The Chooser taps the submitted cards from worst to best. The worst pick earns 1 point and each step up earns 1 more, so the best pick earns N points when N cards were played. After each turn, everyone passes their leftover hand to the player on their left and draws back up to 5 (the host can switch passing off in the lobby).
+- **Deluxe** – Each turn draws a category (Places, Foods, Activities, Entertainment, Animals, Things). Players are dealt 3 fresh cards from it (no passing), play one, and the Chooser scores each card 1–6 (6 = most accurate, each score used once). Max 7 players.
 - **Ranking direction** – Favorites, Least favorite, Alternate, or Random each turn.
 - **Length** – 1 or 2 full cycles (everyone is Chooser once per cycle). Most points wins.
 

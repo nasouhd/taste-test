@@ -86,7 +86,7 @@
           <summary class="display" style="cursor:pointer;font-size:18px">How to play</summary>
           <div style="margin-top:12px">
             <h3>Classic</h3>
-            <p>Everyone holds a hand of 5 cards. Each turn one player is the <b>Chooser</b>. Everyone else secretly plays the card they think the Chooser will <b>love most</b> (or <b>hate most</b>, on flipped turns). The Chooser ranks the cards from worst to best. The best pick earns the most points.</p>
+            <p>Everyone holds a hand of 5 cards. Each turn one player is the <b>Chooser</b>. Everyone else secretly plays the card they think the Chooser will <b>love most</b> (or <b>hate most</b>, on flipped turns). The Chooser ranks the cards from worst to best. The best pick earns the most points. After each turn, everyone passes their leftover cards to the player on their left and draws back up to 5 (the host can turn passing off).</p>
             <h3>Deluxe</h3>
             <p>Each turn draws a category — Places, Foods, Activities, Entertainment, Animals or Things. Players get 3 cards from that category and play one. The Chooser scores every card <b>1–6</b>, with 6 being the most accurate to their taste. That number is your points.</p>
             <h3>Winning</h3>
@@ -153,6 +153,11 @@
               <div class="hint">${s.mode === "deluxe"
                 ? "Category cards. Chooser scores each pick 1–6 (6 = most accurate). Max 7 players."
                 : "Hand of 5 cards. Chooser ranks picks from worst to best."}</div></div>
+            ${s.mode === "standard" ? `<div><label class="lbl">Pass hands</label>
+              ${seg("pass", s.pass !== false, [[true, "Pass left"], [false, "Keep your hand"]], !isHost)}
+              <div class="hint">${s.pass !== false
+                ? "After every turn, everyone passes their leftover cards to the player on their left, then draws back up to 5."
+                : "You keep your own hand and draw 1 card after each turn you play."}</div></div>` : ""}
             <div><label class="lbl">Length</label>
               ${seg("cycles", s.cycles, [[1, "1 cycle"], [2, "2 cycles"]], !isHost)}
               <div class="hint">Everyone is the Chooser ${s.cycles === 2 ? "twice" : "once"} — ${n * s.cycles} turns.</div></div>
@@ -179,7 +184,7 @@
     if (isHost) {
       app.querySelectorAll("[data-seg] button").forEach((b) => (b.onclick = () => {
         const key = b.closest("[data-seg]").dataset.seg;
-        const val = key === "cycles" ? Number(b.dataset.v) : b.dataset.v;
+        const val = key === "cycles" ? Number(b.dataset.v) : key === "pass" ? b.dataset.v === "true" : b.dataset.v;
         act("settings", { settings: { [key]: val } });
       }));
       app.querySelector("#start").onclick = () => act("start");
@@ -287,7 +292,10 @@
       </div>`;
     }
     return `
-      <h3 style="margin:0 0 12px">Your hand — tap a card</h3>
+      <h3 style="margin:0 0 4px">Your hand — tap a card</h3>
+      ${g.passedFrom && g.passedFrom !== state.you
+        ? `<p class="muted" style="margin:0 0 12px;font-weight:700">🔄 ${esc(nameOf(g.passedFrom))} passed you this hand.</p>`
+        : `<div style="height:8px"></div>`}
       <div class="cards">${g.hand.map((c) => cardHTML(c, {
         tag: "button", attrs: `data-card="${c.id}"`, cls: ui.selected === c.id ? "selected" : (ui.selected ? "dim" : "")
       })).join("")}</div>
