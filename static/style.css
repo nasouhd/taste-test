@@ -161,3 +161,11 @@ button.card:hover { transform: translateY(-3px) rotate(-.5deg); }
 .how { font-size: 15px; line-height: 1.5; }
 .how h3 { font-size: 18px; margin-bottom: 4px; }
 .how p { margin: 0 0 10px; }
+
+/* Score tables */
+.board { width: 100%; border-collapse: collapse; font-weight: 700; }
+.board th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 6px 8px; border-bottom: 2px solid var(--line); }
+.board td { padding: 8px; border-bottom: 2px dashed var(--line); }
+.board tr:last-child td { border-bottom: none; }
+.board td .avatar { width: 26px; height: 26px; font-size: 13px; display: inline-grid; vertical-align: middle; margin-right: 4px; }
+.board th .muted { text-transform: none; letter-spacing: 0; font-weight: 700; }

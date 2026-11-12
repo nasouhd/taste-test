@@ -41,6 +41,7 @@ DELUXE = {
             "Hawaii", "A small farm town", "Machu Picchu", "The Amazon rainforest", "Barcelona",
             "A ski lodge", "A city rooftop", "A lighthouse", "Seoul", "Mexico City",
             "Antarctica", "A treehouse", "A castle in Scotland", "The Northern Lights", "Venice",
+            "Santorini", "A rainforest treehouse", "Amsterdam", "Cape Town", "Bangkok", "A sleepy fishing village", "Times Square", "The Sahara Desert", "Rio de Janeiro", "Kyoto", "A vineyard in Tuscany", "Yellowstone", "A tiny Greek island", "Istanbul", "Niagara Falls", "A rooftop pool in Singapore", "The Maldives", "A Parisian café", "Hollywood", "A mountain monastery",
         ],
     },
     "Foods": {
@@ -52,6 +53,7 @@ DELUXE = {
             "Croissants", "Ice cream", "Cheesecake", "Donuts", "Brownies",
             "Nachos", "Shawarma", "Falafel", "Lobster", "Hot wings",
             "Avocado toast", "Grilled cheese", "Churros", "Poke bowls", "Barbecue ribs",
+            "Tiramisu", "Fish and chips", "Biryani", "Gyoza", "Clam chowder", "Bagels and lox", "Paella", "Chicken tikka masala", "Bibimbap", "Pierogi", "Carbonara", "Empanadas", "Cinnamon rolls", "Macarons", "Korean fried chicken", "Tamales", "Lamb kebabs", "Waffles", "Banana bread", "Spring rolls",
         ],
     },
     "Activities": {
@@ -63,6 +65,7 @@ DELUXE = {
             "Scuba diving", "Escape rooms", "Shopping spree", "Spa day", "Running",
             "Ice skating", "Board games", "Fishing", "Horseback riding", "Pottery class",
             "Volunteering", "Paintball", "Stargazing", "Thrifting", "Go-karting",
+            "Ziplining", "Kayaking", "Bungee jumping", "Wine tasting", "Dancing all night", "Baking bread", "Learning a language", "Snowboarding", "Hot air ballooning", "Archery", "Trivia night", "Bird watching", "Knitting", "Sailing", "Watching the sunrise", "Axe throwing", "A cooking class", "Mini golf", "Paddleboarding", "Writing a novel",
         ],
     },
     "Entertainment": {
@@ -74,6 +77,7 @@ DELUXE = {
             "Game shows", "Fantasy novels", "Video game streams", "Opera", "K-dramas",
             "Sports games", "Magic shows", "Mystery novels", "Music festivals", "Silent films",
             "Poetry slams", "Soap operas", "Comic books", "Western movies", "Ballet",
+            "Musical theater", "Romance novels", "Heist movies", "Dating shows", "Murder mysteries", "Animated movies", "Late-night talk shows", "Jazz clubs", "Spy thrillers", "Space documentaries", "Classic rock", "Pop music", "Hip-hop", "Country music", "Esports", "Improv comedy", "Courtroom dramas", "Zombie movies", "Baking competitions", "Medical dramas",
         ],
     },
     "Animals": {
@@ -85,6 +89,7 @@ DELUXE = {
             "Sharks", "Koalas", "Bunnies", "Hamsters", "Turtles",
             "Giraffes", "Octopuses", "Wolves", "Capybaras", "Frogs",
             "Hedgehogs", "Llamas", "Bats", "Jellyfish", "Ducks",
+            "Penguins in tuxedos", "Flamingos", "Seals", "Raccoons", "Cows", "Pigs", "Squirrels", "Tigers", "Gorillas", "Peacocks", "Chameleons", "Whales", "Butterflies", "Ferrets", "Kangaroos", "Axolotls", "Corgis", "Golden retrievers", "Black cats", "Alpacas",
         ],
     },
     "Things": {
@@ -96,6 +101,7 @@ DELUXE = {
             "A hammock", "Polaroid cameras", "Perfume", "A hot tub", "Books",
             "Art supplies", "Gaming consoles", "Stuffed animals", "A road bike", "Hoodies",
             "Coffee mugs", "Snow globes", "Lava lamps", "A pool float", "Trading cards",
+            "A record player", "Memory foam pillows", "A big comfy couch", "Smartwatches", "Vintage cameras", "A cast-iron pan", "Electric scooters", "Board game collections", "A walk-in closet", "Rain boots", "Bean bag chairs", "Fairy lights", "A typewriter", "Matching pajamas", "A telescope", "Instant noodles stash", "A rolling suitcase", "Bluetooth speakers", "A weighted blanket", "A fancy coffee machine",
         ],
     },
 }

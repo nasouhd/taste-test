@@ -22,9 +22,8 @@ from cards import DELUXE, STANDARD
 PORT = int(os.environ.get("PORT", "8000"))
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 HAND_SIZE = 5            # classic: cards in hand
-DELUXE_DEAL = 3          # deluxe: cards dealt from the turn's category
 MIN_PLAYERS = 3
-MAX_PLAYERS = {"standard": 8, "deluxe": 7}   # deluxe: max 6 submissions to score 1-6
+MAX_PLAYERS = {"standard": 8, "deluxe": 8}
 OFFLINE_AFTER = 10       # seconds without a poll before a player counts as offline
 HOST_HANDOFF_AFTER = 20  # seconds the host may be offline before hosting moves on
 ROOM_TTL = 60 * 60       # drop rooms idle for an hour
@@ -59,7 +58,9 @@ class Room:
         self.code = new_code()
         self.players = []          # list of dicts, join order
         self.host_id = None
-        self.settings = {"mode": "standard", "cycles": 1, "direction": "favorite", "pass": True}
+        self.settings = {"mode": "standard", "cycles": 1, "direction": "favorite", "pass": True,
+                         "cats": ["random", "random"]}
+        self.history = []          # finished games, for the running leaderboard
         self.phase = "lobby"       # lobby | submit | rank | reveal | over
         self.game = None
         self.version = 0
@@ -125,54 +126,60 @@ class Room:
         if n < MIN_PLAYERS:
             raise GameError("Need at least %d players." % MIN_PLAYERS)
         if n > MAX_PLAYERS[mode]:
-            raise GameError("Deluxe mode supports up to %d players." % MAX_PLAYERS[mode])
+            raise GameError("This mode supports up to %d players." % MAX_PLAYERS[mode])
         for p in self.players:
             p["score"] = 0
         order = [p["id"] for p in self.players]
         random.shuffle(order)
-        g = {
+        cycles = self.settings["cycles"]
+        # Deluxe: one category per round, chosen by the host or at random (no repeats).
+        round_cats = []
+        if mode == "deluxe":
+            wanted = list(self.settings.get("cats", []))[:cycles]
+            wanted += ["random"] * (cycles - len(wanted))
+            for w in wanted:
+                if w in DELUXE:
+                    round_cats.append(w)
+                else:
+                    pool = [c for c in DELUXE if c not in round_cats and c not in wanted] \
+                        or [c for c in DELUXE if c not in round_cats] or list(DELUXE)
+                    round_cats.append(random.choice(pool))
+        self.game = {
             "order": order,
             "turn": 0,
-            "total": len(order) * self.settings["cycles"],
+            "total": len(order) * cycles,
             "hands": {pid: [] for pid in order},
-            "deck": [],
-            "cat_decks": {},
-            "cat_cycle": [],
+            "decks": {},
+            "round_cats": round_cats,
+            "cur_round": None,
+            "round_scores": {pid: [0] * cycles for pid in order},
         }
-        self.game = g
-        if mode == "standard":
-            for pid in order:
-                g["hands"][pid] = [self.draw() for _ in range(HAND_SIZE)]
         self.start_turn()
 
-    def draw(self):
+    def draw(self, cat=None):
+        """Draw from the classic deck (cat=None) or a Deluxe category deck."""
         g = self.game
-        if not g["deck"]:
-            in_hands = {c["text"] for h in g["hands"].values() for c in h}
-            g["deck"] = [new_card(t) for t in STANDARD if t not in in_hands]
-            random.shuffle(g["deck"])
-        return g["deck"].pop()
-
-    def draw_cat(self, cat):
-        g = self.game
-        deck = g["cat_decks"].get(cat)
+        key = cat or "_classic"
+        deck = g["decks"].get(key)
         if not deck:
-            deck = [new_card(t, cat) for t in DELUXE[cat]["cards"]]
+            in_hands = {c["text"] for h in g["hands"].values() for c in h}
+            source = DELUXE[cat]["cards"] if cat else STANDARD
+            deck = [new_card(t, cat) for t in source if t not in in_hands]
             random.shuffle(deck)
-            g["cat_decks"][cat] = deck
-        return deck.pop()
+            g["decks"][key] = deck
+        return deck.pop() if deck else None
 
     def start_turn(self):
         g = self.game
+        n = len(g["order"])
         # Skip choosers who have dropped out.
         while g["turn"] < g["total"]:
-            chooser = self.player(g["order"][g["turn"] % len(g["order"])])
+            chooser = self.player(g["order"][g["turn"] % n])
             if chooser and self.online(chooser):
                 break
             g["turn"] += 1
         if g["turn"] >= g["total"]:
-            self.phase = "over"
-            self.bump()
+            self.finish()
             return
         g["chooser"] = chooser["id"]
         d = self.settings["direction"]
@@ -185,37 +192,54 @@ class Room:
         g["submissions"] = {}
         g["entries"] = []
         g["results"] = []
-        g["category"] = None
-        if self.settings["mode"] == "deluxe":
-            if not g["cat_cycle"]:
-                g["cat_cycle"] = list(DELUXE.keys())
-                random.shuffle(g["cat_cycle"])
-            cat = g["cat_cycle"].pop()
-            g["category"] = cat
-            seen = set()
-            for pid in g["order"]:
-                hand = []
-                if pid != chooser["id"]:
-                    while len(hand) < DELUXE_DEAL:
-                        c = self.draw_cat(cat)
-                        if c["text"] not in seen:
-                            seen.add(c["text"])
-                            hand.append(c)
-                g["hands"][pid] = hand
-        else:
-            order = g["order"]
-            g["passed_from"] = {}
-            if g.get("played_a_turn") and self.settings.get("pass", True):
-                # Everyone hands their leftover cards to the player on their left.
-                n = len(order)
-                g["hands"] = {order[(i + 1) % n]: g["hands"][order[i]] for i in range(n)}
-                g["passed_from"] = {order[(i + 1) % n]: order[i] for i in range(n)}
-            for pid in order:
-                while len(g["hands"][pid]) < HAND_SIZE:
-                    g["hands"][pid].append(self.draw())
-            g["played_a_turn"] = True
+
+        order = g["order"]
+        rnd = g["turn"] // n
+        cat = g["round_cats"][rnd] if g["round_cats"] else None
+        g["category"] = cat
+        g["passed_from"] = {}
+        g["new_round"] = rnd != g["cur_round"]
+        if g["new_round"]:
+            g["cur_round"] = rnd
+            if cat:
+                # New round, new category: everyone gets a fresh hand.
+                g["hands"] = {pid: [] for pid in order}
+                g["decks"].pop(cat, None)
+        elif self.settings.get("pass", True):
+            # Everyone hands their leftover cards to the player on their left.
+            g["hands"] = {order[(i + 1) % n]: g["hands"][order[i]] for i in range(n)}
+            g["passed_from"] = {order[(i + 1) % n]: order[i] for i in range(n)}
+        for pid in order:
+            while len(g["hands"][pid]) < HAND_SIZE:
+                card = self.draw(cat)
+                if not card:
+                    break
+                g["hands"][pid].append(card)
         self.phase = "submit"
         self.bump()
+
+    def finish(self):
+        """End the game and add it to this room's running leaderboard."""
+        g = self.game
+        self.phase = "over"
+        scores = [(p["name"], p["score"]) for p in self.players if p["id"] in g["order"]]
+        best = max((sc for _, sc in scores), default=0)
+        self.history.append({
+            "mode": self.settings["mode"],
+            "cats": g["round_cats"],
+            "scores": [{"name": nm, "score": sc, "won": sc == best} for nm, sc in scores],
+        })
+        self.bump()
+
+    def leaderboard(self):
+        table = {}
+        for game in self.history:
+            for r in game["scores"]:
+                row = table.setdefault(r["name"], {"name": r["name"], "games": 0, "wins": 0, "points": 0})
+                row["games"] += 1
+                row["wins"] += 1 if r["won"] else 0
+                row["points"] += r["score"]
+        return sorted(table.values(), key=lambda r: (-r["wins"], -r["points"], r["name"]))
 
     def submitters(self):
         g = self.game
@@ -260,31 +284,19 @@ class Room:
         if p["id"] != g["chooser"]:
             raise GameError("Only the chooser can rank.")
         entries = {e["eid"]: e for e in g["entries"]}
-        points = {}
-        if self.settings["mode"] == "deluxe":
-            scores = data.get("scores") or {}
-            if set(scores.keys()) != set(entries.keys()):
-                raise GameError("Score every card.")
-            vals = []
-            for eid, v in scores.items():
-                if not isinstance(v, int) or not 1 <= v <= 6:
-                    raise GameError("Scores must be 1–6.")
-                vals.append(v)
-            if len(set(vals)) != len(vals):
-                raise GameError("Each card needs a different score.")
-            points = dict(scores)
-        else:
-            order = data.get("order") or []
-            if sorted(order) != sorted(entries.keys()):
-                raise GameError("Rank every card.")
-            # Chooser taps worst -> best, so the first card is worth 1 point.
-            points = {eid: i + 1 for i, eid in enumerate(order)}
+        order = data.get("order") or []
+        if sorted(order) != sorted(entries.keys()):
+            raise GameError("Rank every card.")
+        # Chooser taps worst -> best, so the first card is worth 1 point.
+        points = {eid: i + 1 for i, eid in enumerate(order)}
+        rnd = g["cur_round"] or 0
         results = []
         for eid, pts in points.items():
             e = entries[eid]
             pl = self.player(e["pid"])
             if pl:
                 pl["score"] += pts
+                g["round_scores"][pl["id"]][rnd] += pts
             results.append({"pid": e["pid"], "name": pl["name"] if pl else "?",
                             "card": e["card"], "points": pts})
         results.sort(key=lambda r: -r["points"])
@@ -302,9 +314,8 @@ class Room:
         if self.phase not in ("submit", "rank"):
             raise GameError("Can't skip right now.")
         g = self.game
-        if self.settings["mode"] == "standard":   # hand submitted cards back
-            for pid, c in g["submissions"].items():
-                g["hands"][pid].append(c)
+        for pid, c in g["submissions"].items():   # hand submitted cards back
+            g["hands"][pid].append(c)
         g["turn"] += 1
         self.start_turn()
 
@@ -314,6 +325,9 @@ class Room:
             "code": self.code, "you": pid, "hostId": self.host_id, "phase": self.phase,
             "settings": self.settings, "version": self.version,
             "limits": {"min": MIN_PLAYERS, "max": MAX_PLAYERS},
+            "categories": [{"name": k, "emoji": d["emoji"]} for k, d in DELUXE.items()],
+            "leaderboard": self.leaderboard(),
+            "gamesPlayed": len(self.history),
             "players": [{"id": p["id"], "name": p["name"], "score": p["score"],
                          "online": self.online(p)} for p in self.players],
         }
@@ -330,6 +344,9 @@ class Room:
                 "submitted": list(g.get("submissions", {}).keys()),
                 "mine": g.get("submissions", {}).get(pid),
                 "passedFrom": g.get("passed_from", {}).get(pid),
+                "newRound": g.get("new_round", False),
+                "roundCats": g["round_cats"],
+                "roundScores": g["round_scores"],
                 "entries": [{"eid": e["eid"], "card": e["card"]} for e in g.get("entries", [])]
                 if self.phase == "rank" else [],
                 "results": g.get("results", []) if self.phase in ("reveal",) else [],
@@ -436,6 +453,9 @@ class Handler(BaseHTTPRequestHandler):
                 room.settings["mode"] = s["mode"]
             if s.get("cycles") in (1, 2):
                 room.settings["cycles"] = s["cycles"]
+            cats = s.get("cats")
+            if isinstance(cats, list) and len(cats) == 2 and all(c == "random" or c in DELUXE for c in cats):
+                room.settings["cats"] = cats
             if s.get("pass") in (True, False):
                 room.settings["pass"] = s["pass"]
             if s.get("direction") in ("favorite", "least", "alternate", "random"):

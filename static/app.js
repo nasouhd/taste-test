@@ -7,7 +7,7 @@
   let pollTimer = null;
   let busy = false;
   // Local, per-turn UI state
-  let ui = { key: null, selected: null, order: [], scores: {} };
+  let ui = { key: null, selected: null, order: [] };
 
   // ---------- utils ----------
   function load() { try { return JSON.parse(sessionStorage.getItem("tt-creds")); } catch { return null; } }
@@ -52,7 +52,7 @@
     state = v;
     const g = v.game;
     const key = g ? `${g.turn}-${v.phase === "submit" ? "s" : "r"}` : null;
-    if (key !== ui.key) ui = { key, selected: null, order: [], scores: {} };
+    if (key !== ui.key) ui = { key, selected: null, order: [] };
     render();
   }
 
@@ -88,9 +88,9 @@
             <h3>Classic</h3>
             <p>Everyone holds a hand of 5 cards. Each turn one player is the <b>Chooser</b>. Everyone else secretly plays the card they think the Chooser will <b>love most</b> (or <b>hate most</b>, on flipped turns). The Chooser ranks the cards from worst to best. The best pick earns the most points. After each turn, everyone passes their leftover cards to the player on their left and draws back up to 5 (the host can turn passing off).</p>
             <h3>Deluxe</h3>
-            <p>Each turn draws a category — Places, Foods, Activities, Entertainment, Animals or Things. Players get 3 cards from that category and play one. The Chooser scores every card <b>1–6</b>, with 6 being the most accurate to their taste. That number is your points.</p>
+            <p>Same rules as Classic, but each <b>round has one category</b> — Places, Foods, Activities, Entertainment, Animals or Things. Every card in that round comes from it. When a new round starts, everyone gets a fresh hand from the new category. The host can pick each round's category or leave it random.</p>
             <h3>Winning</h3>
-            <p>Everyone takes a turn as Chooser once per cycle. Play 1 or 2 full cycles — most points wins.</p>
+            <p>Everyone takes a turn as Chooser once per round. Play 1 or 2 rounds — most points wins. The room leaderboard keeps track of wins and points across every game you play together.</p>
           </div>
         </details>
       </div></div>`;
@@ -116,6 +116,29 @@
   function seg(id, value, options, disabled) {
     return `<div class="seg" data-seg="${id}">${options.map(([v, label]) =>
       `<button data-v="${v}" class="${String(v) === String(value) ? "on" : ""}" ${disabled ? "disabled" : ""}>${label}</button>`).join("")}</div>`;
+  }
+
+  function catPickers(s, isHost) {
+    const cats = s.cats || ["random", "random"];
+    const opts = [["random", "🎲 Random"], ...state.categories.map((c) => [c.name, `${c.emoji} ${c.name}`])];
+    let out = "";
+    for (let r = 0; r < s.cycles; r++) {
+      out += `<div><label class="lbl">Round ${r + 1} category</label>
+        <div class="seg" data-seg="cats${r}" data-cats>${opts.map(([v, label]) =>
+          `<button data-cat-round="${r}" data-v="${v}" class="${cats[r] === v ? "on" : ""}" ${isHost ? "" : "disabled"}>${label}</button>`).join("")}</div></div>`;
+    }
+    return out + `<div class="hint" style="margin-top:-6px">All cards in a round come from its category. Random picks a different one each round.</div>`;
+  }
+
+  function leaderboardHTML(title) {
+    const lb = state.leaderboard || [];
+    if (!lb.length) return "";
+    return `<div class="panel" style="text-align:left">
+      <h2 style="margin-bottom:4px">${title}</h2>
+      <p class="muted" style="margin:0 0 8px;font-weight:700">${state.gamesPlayed} game${state.gamesPlayed === 1 ? "" : "s"} played in this room</p>
+      <table class="board"><thead><tr><th></th><th>Player</th><th>Wins</th><th>Points</th><th>Games</th></tr></thead>
+      <tbody>${lb.map((r, i) => `<tr><td>${i === 0 ? "👑" : i + 1}</td><td><b>${esc(r.name)}</b></td><td>${r.wins}</td><td>${r.points}</td><td>${r.games}</td></tr>`).join("")}</tbody></table>
+    </div>`;
   }
 
   function renderLobby() {
@@ -151,16 +174,17 @@
             <div><label class="lbl">Mode</label>
               ${seg("mode", s.mode, [["standard", "Classic"], ["deluxe", "Deluxe"]], !isHost)}
               <div class="hint">${s.mode === "deluxe"
-                ? "Category cards. Chooser scores each pick 1–6 (6 = most accurate). Max 7 players."
-                : "Hand of 5 cards. Chooser ranks picks from worst to best."}</div></div>
-            ${s.mode === "standard" ? `<div><label class="lbl">Pass hands</label>
+                ? "Same rules as Classic, but every card in a round comes from one category."
+                : "Hand of 5 cards from everything. Chooser ranks picks from worst to best."}</div></div>
+            <div><label class="lbl">Length</label>
+              ${seg("cycles", s.cycles, [[1, "1 round"], [2, "2 rounds"]], !isHost)}
+              <div class="hint">Everyone is the Chooser once per round — ${n * s.cycles} turns in total.</div></div>
+            ${s.mode === "deluxe" ? catPickers(s, isHost) : ""}
+            <div><label class="lbl">Pass hands</label>
               ${seg("pass", s.pass !== false, [[true, "Pass left"], [false, "Keep your hand"]], !isHost)}
               <div class="hint">${s.pass !== false
                 ? "After every turn, everyone passes their leftover cards to the player on their left, then draws back up to 5."
-                : "You keep your own hand and draw 1 card after each turn you play."}</div></div>` : ""}
-            <div><label class="lbl">Length</label>
-              ${seg("cycles", s.cycles, [[1, "1 cycle"], [2, "2 cycles"]], !isHost)}
-              <div class="hint">Everyone is the Chooser ${s.cycles === 2 ? "twice" : "once"} — ${n * s.cycles} turns.</div></div>
+                : "You keep your own hand and draw back up to 5 after each turn."}</div></div>
             <div><label class="lbl">Ranking</label>
               ${seg("direction", s.direction, [["favorite", "Favorites"], ["least", "Least fav"], ["alternate", "Alternate"], ["random", "Random"]], !isHost)}
               <div class="hint">${{
@@ -171,18 +195,25 @@
               }[s.direction]}</div></div>
             ${isHost
               ? `<button class="btn block" id="start" ${canStart ? "" : "disabled"}>Start game</button>
-                 ${n > max ? `<p class="hint">Too many players for Deluxe (max ${max}).</p>` : ""}`
+                 ${n > max ? `<p class="hint">Too many players (max ${max}).</p>` : ""}`
               : `<p class="muted center" style="font-weight:700">Waiting for the host to start…</p>`}
           </div>
         </div>
+        ${leaderboardHTML("🏅 Room leaderboard")}
       </div>`;
+    app.querySelectorAll("[data-cat-round]").forEach((b) => (b.onclick = () => {
+      if (!isHost) return;
+      const cats = [...(s.cats || ["random", "random"])];
+      cats[Number(b.dataset.catRound)] = b.dataset.v;
+      act("settings", { settings: { cats } });
+    }));
     app.querySelector("#copy").onclick = () => {
       navigator.clipboard?.writeText(link).then(() => toast("Invite link copied!"), () => toast(link));
     };
     app.querySelector("#leave").onclick = leave;
     app.querySelectorAll("[data-kick]").forEach((b) => (b.onclick = () => act("kick", { target: b.dataset.kick })));
     if (isHost) {
-      app.querySelectorAll("[data-seg] button").forEach((b) => (b.onclick = () => {
+      app.querySelectorAll("[data-seg]:not([data-cats]) button").forEach((b) => (b.onclick = () => {
         const key = b.closest("[data-seg]").dataset.seg;
         const val = key === "cycles" ? Number(b.dataset.v) : key === "pass" ? b.dataset.v === "true" : b.dataset.v;
         act("settings", { settings: { [key]: val } });
@@ -232,13 +263,14 @@
     }
     const banner = `
       <div class="banner ${love ? "favorite" : "least"}">
-        ${g.category ? `<div class="cat-tag">${g.category.emoji} ${esc(g.category.name)}</div>` : ""}
+        ${g.category ? `<div class="cat-tag">${g.category.emoji} Round ${g.round}: ${esc(g.category.name)}${
+          g.newRound && g.round > 1 && state.phase === "submit" ? " — new round, new cards!" : ""}</div>` : ""}
         <h2>${headline}</h2><p>${love ? "❤️" : "💀"} ${sub}</p>
       </div>`;
 
     let body = "";
     if (state.phase === "submit") body = isChooser ? chooserWaiting() : submitView();
-    else if (state.phase === "rank") body = isChooser ? (deluxe ? deluxeRankView(love) : rankView(love)) : spectateRank(chooserName);
+    else if (state.phase === "rank") body = isChooser ? rankView(love) : spectateRank(chooserName);
     else if (state.phase === "reveal") body = revealView(isHost || isChooser, deluxe);
 
     const hostTools = isHost && (state.phase === "submit" || state.phase === "rank")
@@ -249,7 +281,7 @@
         <div class="topbar">
           <div class="logo" style="font-size:26px"><span>Taste</span> <span>Test</span></div>
           <span class="pill">${deluxe ? "Deluxe" : "Classic"}</span>
-          <span class="pill">Cycle ${g.round}/${state.settings.cycles}</span>
+          <span class="pill">Round ${g.round}/${state.settings.cycles}</span>
           <span class="pill">Turn ${g.turn}/${g.total}</span>
           <span class="spacer"></span>
           <button class="btn ghost small" id="leave">Leave</button>
@@ -325,28 +357,6 @@
       </div>`;
   }
 
-  function deluxeRankView(love) {
-    const g = state.game;
-    const used = new Set(Object.values(ui.scores));
-    const done = g.entries.every((e) => ui.scores[e.eid]);
-    return `
-      <div class="panel" style="margin-bottom:16px">
-        <b>Score every card from 1 to 6.</b> 6 = ${love ? "exactly my taste" : "I'd hate this the most"}, 1 = way off.
-        <span class="muted">Each score can only be used once.</span>
-      </div>
-      <div class="cards">${g.entries.map((e) => cardHTML(e.card, {
-        cls: ui.scores[e.eid] ? "selected" : "",
-        extra: `<div class="scale">${[1, 2, 3, 4, 5, 6].map((v) => {
-          const on = ui.scores[e.eid] === v;
-          return `<button data-score="${e.eid}" data-v="${v}" class="${on ? "on" : ""}" ${!on && used.has(v) ? "disabled" : ""}>${v}</button>`;
-        }).join("")}</div>`
-      })).join("")}</div>
-      <div class="actions">
-        <button class="btn ghost" id="reset" ${used.size ? "" : "disabled"}>Reset</button>
-        <button class="btn" id="lock" ${done ? "" : "disabled"}>Lock in scores</button>
-      </div>`;
-  }
-
   function spectateRank(chooserName) {
     const g = state.game;
     return `<div class="panel center" style="margin-bottom:16px"><h2>${chooserName} is ranking… 🤔</h2>
@@ -360,7 +370,7 @@
     return `
       <div class="results">${g.results.map((r, i) => `
         <div class="result" style="animation-delay:${i * 0.12}s">
-          <div class="place">${deluxe ? r.points : "#" + (i + 1)}</div>
+          <div class="place">#${i + 1}</div>
           <div class="what"><b>${esc(r.card.text)}</b><span class="muted" style="font-weight:700">played by ${esc(r.name)}${r.pid === state.you ? " (you)" : ""}</span></div>
           <div class="gain">+${r.points}</div>
         </div>`).join("")}</div>
@@ -381,26 +391,25 @@
       if (i >= 0) ui.order.splice(i, 1); else ui.order.push(id);
       renderGame();
     }));
-    app.querySelectorAll("[data-score]").forEach((b) => (b.onclick = () => {
-      const id = b.dataset.score, v = Number(b.dataset.v);
-      if (ui.scores[id] === v) delete ui.scores[id]; else ui.scores[id] = v;
-      renderGame();
-    }));
     const reset = app.querySelector("#reset");
-    if (reset) reset.onclick = () => { ui.order = []; ui.scores = {}; renderGame(); };
+    if (reset) reset.onclick = () => { ui.order = []; renderGame(); };
     const lock = app.querySelector("#lock");
-    if (lock) lock.onclick = () => act("rank", state.settings.mode === "deluxe" ? { scores: ui.scores } : { order: ui.order });
+    if (lock) lock.onclick = () => act("rank", { order: ui.order });
     const next = app.querySelector("#next");
     if (next) next.onclick = () => act("next");
   }
 
   function renderOver() {
-    const ranked = [...state.players].sort((a, b) => b.score - a.score);
+    const inGame = new Set((state.game && state.game.order) || state.players.map((p) => p.id));
+    const ranked = state.players.filter((p) => inGame.has(p.id)).sort((a, b) => b.score - a.score);
     const top = ranked[0];
     const winners = ranked.filter((p) => p.score === top.score);
     const isHost = state.hostId === state.you;
     const podium = [ranked[1], ranked[0], ranked[2]];
     const heights = [110, 150, 80], labels = ["2", "1", "3"];
+    const g = state.game || {}, rs = g.roundScores || {}, cats = g.roundCats || [];
+    const rounds = Array.from({ length: state.settings.cycles }, (_, r) => r);
+    const roundHeads = rounds.map((r) => `<th>Round ${r + 1}${cats[r] ? `<br><span class="muted">${esc(cats[r])}</span>` : ""}</th>`).join("");
     app.innerHTML = `
       <div class="wrap center">
         <div class="logo" style="font-size:34px"><span>Taste</span> <span>Test</span></div>
@@ -410,9 +419,13 @@
           <div class="step"><div class="nm">${esc(p.name)}</div><div class="sc">${p.score} pts</div>
             <div class="block" style="height:${heights[i]}px;background:${colorOf(p.id)}">${labels[i]}</div></div>` : "").join("")}
         </div>
-        <div class="panel" style="max-width:460px;margin:0 auto;text-align:left">
-          <ul class="plist">${ranked.map((p, i) => `<li>${i + 1}. ${avatar(p)} ${esc(p.name)}<span class="spacer"></span><b>${p.score}</b></li>`).join("")}</ul>
+        <div class="panel" style="max-width:620px;margin:0 auto;text-align:left">
+          <h2 style="margin-bottom:8px">This game</h2>
+          <table class="board"><thead><tr><th></th><th>Player</th>${roundHeads}<th>Total</th></tr></thead>
+          <tbody>${ranked.map((p, i) => `<tr><td>${i + 1}</td><td>${avatar(p)} <b>${esc(p.name)}</b></td>${
+            rounds.map((_, r) => `<td>${(rs[p.id] || [])[r] ?? 0}</td>`).join("")}<td><b>${p.score}</b></td></tr>`).join("")}</tbody></table>
         </div>
+        <div style="max-width:620px;margin:18px auto 0">${leaderboardHTML("🏅 Room leaderboard")}</div>
         <div class="actions">
           ${isHost ? `<button class="btn" id="again">Back to lobby</button>` : `<p class="muted" style="font-weight:700">The host can start a new game.</p>`}
           <button class="btn ghost" id="leave">Leave</button>

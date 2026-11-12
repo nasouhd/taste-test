@@ -21,8 +21,9 @@ Use `PORT=9000 python3 server.py` to change the port. No installs needed (Python
 
 ## Modes
 - **Classic** – 5-card hand. The Chooser taps the submitted cards from worst to best. The worst pick earns 1 point and each step up earns 1 more, so the best pick earns N points when N cards were played. After each turn, everyone passes their leftover hand to the player on their left and draws back up to 5 (the host can switch passing off in the lobby).
-- **Deluxe** – Each turn draws a category (Places, Foods, Activities, Entertainment, Animals, Things). Players are dealt 3 fresh cards from it (no passing), play one, and the Chooser scores each card 1–6 (6 = most accurate, each score used once). Max 7 players.
+- **Deluxe** – Same rules as Classic (hand of 5, pass left, rank worst to best), but each round has one category (Places, Foods, Activities, Entertainment, Animals, Things) and every card in that round comes from it. A new round deals everyone a fresh hand from the next category. The host picks each round's category or leaves it random.
 - **Ranking direction** – Favorites, Least favorite, Alternate, or Random each turn.
-- **Length** – 1 or 2 full cycles (everyone is Chooser once per cycle). Most points wins.
+- **Length** – 1 or 2 rounds (everyone is Chooser once per round). Most points wins.
+- **Leaderboard** – The final screen shows points per round, and a room leaderboard tracks wins and points across every game played in that room.
 
 Edit `cards.py` to add your own cards.
