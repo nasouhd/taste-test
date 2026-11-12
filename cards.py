@@ -1,0 +1,101 @@
+"""Card content for Taste Test."""
+
+STANDARD = [
+    "Pizza at midnight", "A rainy day indoors", "Puppies", "Roller coasters", "Sushi",
+    "Camping under the stars", "Karaoke night", "A long hot shower", "Thunderstorms", "Road trips",
+    "Breakfast in bed", "Horror movies", "Board game night", "Snow days", "The beach",
+    "Tacos", "Fresh laundry smell", "Sleeping in", "Live concerts", "Fireworks",
+    "A good cup of coffee", "Bubble tea", "Theme parks", "Video games", "Hiking",
+    "Reality TV", "Ice cream", "Dancing", "Cats", "Spicy food",
+    "Getting a massage", "Going to the gym", "Thrift shopping", "Escape rooms", "Bonfires",
+    "Musicals", "Fancy restaurants", "Fast food drive-thrus", "Sunrises", "Sunsets",
+    "Ski trips", "Scuba diving", "Gardening", "Baking cookies", "Podcasts",
+    "True crime documentaries", "Anime", "Superhero movies", "Rom-coms", "Stand-up comedy",
+    "Cheesecake", "Pancakes", "Fried chicken", "Mac and cheese", "Dumplings",
+    "Avocado toast", "Barbecue", "Pho", "Chocolate", "Popcorn at the movies",
+    "Bowling", "Mini golf", "Go-karts", "Water parks", "Zoos",
+    "Museums", "Libraries", "Bookstores", "Farmers markets", "Flea markets",
+    "New York City", "Paris", "Tokyo", "A cabin in the woods", "A tropical island",
+    "Road-side diners", "Rooftop parties", "Pool parties", "Sleepovers", "Game day tailgates",
+    "Holiday lights", "Halloween costumes", "Birthday cake", "Surprise parties", "Thanksgiving dinner",
+    "Dogs in sweaters", "Baby animals", "Horses", "Dolphins", "Penguins",
+    "Sneaker collecting", "Painting", "Playing guitar", "Photography", "Journaling",
+    "Yoga", "Running a marathon", "Soccer", "Basketball", "Tennis",
+    "Online shopping", "Getting a package", "A clean room", "Candles", "Cozy blankets",
+    "Hot chocolate", "Lemonade on a hot day", "Iced coffee", "Smoothies", "Energy drinks",
+    "Road trip snacks", "Gas station sushi", "Airplane food", "Long flights", "Window seats",
+    "Group chats", "Voice memos", "Selfies", "TikTok rabbit holes", "Memes",
+    "Haunted houses", "Magic tricks", "Tarot cards", "Astrology", "Puzzles",
+    "Crossword puzzles", "Trivia night", "Poker night", "Monopoly", "Chess",
+    "Thunder and lightning", "Fog", "Heat waves", "Autumn leaves", "Spring flowers",
+    "Mountains", "Lakes", "Deserts", "Big cities", "Small towns",
+]
+
+DELUXE = {
+    "Places": {
+        "emoji": "📍",
+        "cards": [
+            "Paris", "Tokyo", "New York City", "A beach in Bali", "The Swiss Alps",
+            "Las Vegas", "A cabin in the woods", "Disney World", "The Grand Canyon", "London",
+            "Rome", "Iceland", "A cruise ship", "A desert oasis", "Dubai",
+            "Hawaii", "A small farm town", "Machu Picchu", "The Amazon rainforest", "Barcelona",
+            "A ski lodge", "A city rooftop", "A lighthouse", "Seoul", "Mexico City",
+            "Antarctica", "A treehouse", "A castle in Scotland", "The Northern Lights", "Venice",
+        ],
+    },
+    "Foods": {
+        "emoji": "🍕",
+        "cards": [
+            "Pizza", "Sushi", "Tacos", "Burgers", "Ramen",
+            "Pad Thai", "Fried chicken", "Mac and cheese", "Steak", "Pho",
+            "Curry", "Dumplings", "Lasagna", "Caesar salad", "Pancakes",
+            "Croissants", "Ice cream", "Cheesecake", "Donuts", "Brownies",
+            "Nachos", "Shawarma", "Falafel", "Lobster", "Hot wings",
+            "Avocado toast", "Grilled cheese", "Churros", "Poke bowls", "Barbecue ribs",
+        ],
+    },
+    "Activities": {
+        "emoji": "🎯",
+        "cards": [
+            "Skydiving", "Karaoke", "Hiking", "Bowling", "Painting",
+            "Rock climbing", "Surfing", "Yoga", "Cooking a fancy meal", "Gardening",
+            "Going clubbing", "Camping", "Playing video games", "Reading a book", "Road tripping",
+            "Scuba diving", "Escape rooms", "Shopping spree", "Spa day", "Running",
+            "Ice skating", "Board games", "Fishing", "Horseback riding", "Pottery class",
+            "Volunteering", "Paintball", "Stargazing", "Thrifting", "Go-karting",
+        ],
+    },
+    "Entertainment": {
+        "emoji": "🎬",
+        "cards": [
+            "Horror movies", "Rom-coms", "Superhero movies", "Anime", "Reality TV",
+            "True crime docs", "Stand-up comedy", "Broadway musicals", "Live concerts", "Podcasts",
+            "Sitcoms", "Nature documentaries", "Cooking shows", "Sci-fi epics", "Cartoons",
+            "Game shows", "Fantasy novels", "Video game streams", "Opera", "K-dramas",
+            "Sports games", "Magic shows", "Mystery novels", "Music festivals", "Silent films",
+            "Poetry slams", "Soap operas", "Comic books", "Western movies", "Ballet",
+        ],
+    },
+    "Animals": {
+        "emoji": "🐾",
+        "cards": [
+            "Dogs", "Cats", "Horses", "Dolphins", "Penguins",
+            "Elephants", "Sloths", "Pandas", "Owls", "Snakes",
+            "Lions", "Red pandas", "Otters", "Goats", "Parrots",
+            "Sharks", "Koalas", "Bunnies", "Hamsters", "Turtles",
+            "Giraffes", "Octopuses", "Wolves", "Capybaras", "Frogs",
+            "Hedgehogs", "Llamas", "Bats", "Jellyfish", "Ducks",
+        ],
+    },
+    "Things": {
+        "emoji": "🎁",
+        "cards": [
+            "Cozy blankets", "Scented candles", "Sneakers", "Vinyl records", "A new phone",
+            "Houseplants", "Sunglasses", "A fancy watch", "Fresh flowers", "Board games",
+            "A good pen", "Fuzzy socks", "A sports car", "Headphones", "Jewelry",
+            "A hammock", "Polaroid cameras", "Perfume", "A hot tub", "Books",
+            "Art supplies", "Gaming consoles", "Stuffed animals", "A road bike", "Hoodies",
+            "Coffee mugs", "Snow globes", "Lava lamps", "A pool float", "Trading cards",
+        ],
+    },
+}

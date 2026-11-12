@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: taste-test
+    runtime: python
+    plan: free
+    buildCommand: "echo no build needed"
+    startCommand: "python3 server.py"
