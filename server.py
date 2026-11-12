@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Taste Test — a multiplayer "rank your friends' picks" party game.
+"""NasouNu — a multiplayer "rank your friends' picks" party game.
 
 Zero dependencies: run `python3 server.py` and open http://localhost:8000
 Players on the same Wi-Fi can join using the LAN address printed at startup.
@@ -560,7 +560,7 @@ if __name__ == "__main__":
             PORT += 1
     if srv is None:
         sys.exit("  Couldn't find a free port.")
-    print("\n  🍽️  Taste Test is running!")
+    print("\n  🍽️  NasouNu is running!")
     print("     On this computer:  http://localhost:%d" % PORT)
     ip = lan_ip()
     if ip:

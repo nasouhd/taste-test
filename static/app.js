@@ -69,7 +69,7 @@
     app.innerHTML = `
       <div class="wrap"><div class="home stack">
         <div class="center">
-          <div class="logo"><span>Taste</span> <span>Test</span></div>
+          <div class="logo"><span>Nasou</span><span>Nu</span></div>
           <div class="tag">How well do you know your friends' favorites?</div>
         </div>
         <div class="panel stack">
@@ -148,7 +148,7 @@
     const link = `${location.origin}/?room=${state.code}`;
     app.innerHTML = `
       <div class="wrap stack">
-        <div class="row"><div class="logo" style="font-size:34px"><span>Taste</span> <span>Test</span></div><div class="spacer"></div>
+        <div class="row"><div class="logo" style="font-size:34px"><span>Nasou</span><span>Nu</span></div><div class="spacer"></div>
           <button class="btn ghost small" id="leave">Leave</button></div>
         <div class="panel center">
           <div class="muted" style="font-weight:800">ROOM CODE</div>
@@ -176,7 +176,7 @@
               <div class="hint">${s.mode === "deluxe"
                 ? "Same rules as Classic, but every card in a round comes from one category."
                 : "Hand of 5 cards from everything. Chooser ranks picks from worst to best."}</div></div>
-            <div><label class="lbl">Length</label>
+            <div><label class="lbl">Number of rounds</label>
               ${seg("cycles", s.cycles, [[1, "1 round"], [2, "2 rounds"]], !isHost)}
               <div class="hint">Everyone is the Chooser once per round — ${n * s.cycles} turns in total.</div></div>
             ${s.mode === "deluxe" ? catPickers(s, isHost) : ""}
@@ -279,7 +279,7 @@
     app.innerHTML = `
       <div class="wrap">
         <div class="topbar">
-          <div class="logo" style="font-size:26px"><span>Taste</span> <span>Test</span></div>
+          <div class="logo" style="font-size:26px"><span>Nasou</span><span>Nu</span></div>
           <span class="pill">${deluxe ? "Deluxe" : "Classic"}</span>
           <span class="pill">Round ${g.round}/${state.settings.cycles}</span>
           <span class="pill">Turn ${g.turn}/${g.total}</span>
@@ -412,7 +412,7 @@
     const roundHeads = rounds.map((r) => `<th>Round ${r + 1}${cats[r] ? `<br><span class="muted">${esc(cats[r])}</span>` : ""}</th>`).join("");
     app.innerHTML = `
       <div class="wrap center">
-        <div class="logo" style="font-size:34px"><span>Taste</span> <span>Test</span></div>
+        <div class="logo" style="font-size:34px"><span>Nasou</span><span>Nu</span></div>
         <h2 style="font-size:clamp(28px,6vw,44px);margin-top:18px">🏆 ${winners.map((w) => esc(w.name)).join(" & ")} ${winners.length > 1 ? "tie" : "wins"}!</h2>
         <p class="muted" style="font-weight:700">Best at reading everyone's taste with ${top.score} points.</p>
         <div class="podium">${podium.map((p, i) => p ? `

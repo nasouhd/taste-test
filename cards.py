@@ -1,4 +1,4 @@
-"""Card content for Taste Test."""
+"""Card content for NasouNu."""
 
 STANDARD = [
     "Pizza at midnight", "A rainy day indoors", "Puppies", "Roller coasters", "Sushi",

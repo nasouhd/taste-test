@@ -1,4 +1,4 @@
-# Taste Test
+# NasouNu
 
 A multiplayer party game: guess what your friends love (or hate) most.
 
